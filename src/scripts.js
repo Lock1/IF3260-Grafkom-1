@@ -1,22 +1,38 @@
 function main() {
-    var gl      = document.getElementById("c").getContext("webgl");
+    var canvas  = document.getElementById("c");
+    var gl      = canvas.getContext("webgl");
     var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader", "fragment-shader"]);
 
     var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
     var colorAttributeLocation    = gl.getAttribLocation(program, "a_color");
-    var translationLocation       = gl.getUniformLocation(program, "u_translation");
-    var resolutionLocation        = gl.getUniformLocation(program, "u_resolution");
+
+    var vertices = [
+        0.0, 0.0,
+        0.5, 0.5
+    ];
+
+    var colors   = [
+        0.0, 0.0, 0.0, 1.0,
+        0.0, 1.0, 0.0, 1.0
+    ];
 
     var positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    setGeometry(gl);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(vertices),
+        gl.STATIC_DRAW
+    );
 
     var colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    setColors(gl);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(colors),
+        gl.STATIC_DRAW
+    );
 
-    var resolution  = [1000, 1000];
-    var translation = [100, 100];
+    canvas.onmousedown = function (e) { click_handler(e, gl, canvas) };
 
     drawScene();
 
@@ -25,12 +41,16 @@ function main() {
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.useProgram(program);
 
         gl.enableVertexAttribArray(positionAttributeLocation);
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        gl.depthFunc(gl.LEQUAL);
+        gl.enable(gl.DEPTH_TEST);
 
         var size = 2;
         var type = gl.FLOAT;
@@ -44,74 +64,23 @@ function main() {
         var size = 4;
         gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
 
-        gl.uniform2fv(translationLocation, translation);
-        gl.uniform2fv(resolutionLocation, resolution);
-
-        var primitiveType = gl.TRIANGLES;
+        var primitiveType = gl.LINES;
         var offset = 0;
-        var count = 18;
+        var count = 2;
         gl.drawArrays(primitiveType, offset, count);
     }
 }
 
+function click_handler(e, gl, canvas) {
+    var x    = e.clientX;
+    var y    = e.clientY;
+    var rect = e.target.getBoundingClientRect();
 
-function setGeometry(gl) {
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array([
-            0, 0,
-            30, 0,
-            0, 150,
-            0, 150,
-            30, 0,
-            30, 150,
+    // Normalisasi antara 0 - 1
+    x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
-            30, 0,
-            100, 0,
-            30, 30,
-            30, 30,
-            100, 0,
-            100, 30,
-
-            30, 60,
-            67, 60,
-            30, 90,
-            30, 90,
-            67, 60,
-            67, 90,
-        ]),
-        gl.STATIC_DRAW
-    );
+    console.log(x, y);
 }
-
-function setColors(gl) {
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array([
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1,
-            0.1, 0.2, 0.8, 1
-        ]),
-        gl.STATIC_DRAW
-    );
-}
-
 
 main();
