@@ -35,7 +35,7 @@ function main() {
 
     // Keyword referensi : JS mouse event handler
     canvas.onmousedown = function (e) { click_handler(e, gl, canvas) };
-    canvas.onmousemove = function (e) { hover_handler(e, gl, canvas) }; // TODO : Extra, Bonus
+    // canvas.onmousemove = function (e) { hover_handler(e, gl, canvas) }; // TODO : Extra, Bonus
 
     drawScene();
 
@@ -47,6 +47,14 @@ function main() {
         gl.bufferData(
             gl.ARRAY_BUFFER,
             new Float32Array(vertices),
+            gl.STATIC_DRAW
+        );
+
+        var colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(colors),
             gl.STATIC_DRAW
         );
 
@@ -77,7 +85,7 @@ function main() {
 
         var primitiveType = gl.LINES;
         var offset = 0;
-        var count = 2;
+        var count = Math.floor(vertices.length / 2);
         gl.drawArrays(primitiveType, offset, count);
         window.requestAnimationFrame(drawScene);
     }
@@ -91,7 +99,13 @@ function main() {
         x = (2*(x - rect.left) - canvas.width) / canvas.width;
         y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
-        console.log(x, y);
+        vertices.push(x);
+        vertices.push(y);
+
+        colors.push(1.0);
+        colors.push(0.0);
+        colors.push(0.0);
+        colors.push(1.0);
     }
 
     function hover_handler(e, gl, canvas) {
@@ -105,9 +119,6 @@ function main() {
 
         vertices[2] = x;
         vertices[3] = y;
-
-        // console.log(x, y);
-        drawScene();
     }
 }
 
