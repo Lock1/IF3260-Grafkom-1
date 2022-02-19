@@ -2,23 +2,25 @@
 <html lang="en" dir="ltr">
     <head>
         <meta charset="utf-8">
-        <title>WebGL 2D Translation</title>
+        <title>Tugas Besar 1</title>
     </head>
     <body>
-        <canvas id="c" width="1000vw" height="1000vh" display="block"></canvas>
+        <canvas id="c" width="500vw" height="500vh" display="block"></canvas>
+
+        <p id="mode">Line tool</p>
+        <button onclick="line_btn_handler()">Line</button>
+        <button onclick="rectangle_btn_handler()">Rectangle</button>
+        <button onclick="polygon_btn_handler()">Polygon</button>
+        <button onclick="select_btn_handler()">Selection</button>
     </body>
 
     <script id="vertex-shader" type="notjs">
         attribute vec2 a_position;
         attribute vec4 a_color;
         varying vec4 v_color;
-        uniform vec2 u_translation;
-        uniform vec2 u_resolution;
 
         void main() {
-          vec2 position    = a_position + u_translation;
-          vec2 normal_clip = (position * 2.0 / u_resolution) - 1.0;
-          gl_Position      = vec4(normal_clip * vec2(1, -1), 0, 1);
+          gl_Position = vec4(a_position, 0.0, 1.0);
 
           v_color = a_color;
         }
