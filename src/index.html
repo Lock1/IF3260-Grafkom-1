@@ -6,12 +6,12 @@
     </head>
     <body>
         <canvas id="c" width="500vw" height="500vh" display="block"></canvas>
-        <p id="mode">Garis</p>
-        <!-- TODO : Tambah -->
-        <button onclick="">Line</button>
-        <button onclick="">Rectangle</button>
-        <button onclick="">Polygon</button>
-        <button onclick="">Selection</button>
+
+        <p id="mode">Line tool</p>
+        <button onclick="line_btn_handler()">Line</button>
+        <button onclick="rectangle_btn_handler()">Rectangle</button>
+        <button onclick="polygon_btn_handler()">Polygon</button>
+        <button onclick="select_btn_handler()">Selection</button>
     </body>
 
     <script id="vertex-shader" type="notjs">
