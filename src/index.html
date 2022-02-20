@@ -8,10 +8,13 @@
         <canvas id="c" width="500vw" height="500vh" display="block"></canvas>
 
         <p id="mode">Line tool</p>
-        <button onclick="line_btn_handler()">Line</button>
-        <button onclick="rectangle_btn_handler()">Rectangle</button>
-        <button onclick="polygon_btn_handler()">Polygon</button>
-        <button onclick="select_btn_handler()">Selection</button>
+        <div id="shape_draw">
+            <button onclick="line_btn_handler()">Line</button>
+            <button onclick="rectangle_btn_handler()">Rectangle</button>
+            <button onclick="polygon_btn_handler()">Polygon</button>
+            <button onclick="select_btn_handler()">Selection</button>
+        </div>
+        <div id="polygon_helper"></div>
     </body>
 
     <script id="vertex-shader" type="notjs">
