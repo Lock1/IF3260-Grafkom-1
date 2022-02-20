@@ -1,10 +1,14 @@
 var canvas   = document.getElementById("c");
 var gl       = canvas.getContext("webgl");
 var hover_draw = false;
+var hover_draw_polygon = false;
 var vertices = [
     // 0.0, 0.0,
     // 0.5, 0.5
 ];
+
+var polygon_vertices = []
+var temp_polygon_vertices = [];
 
 var colors   = [
     // 0.0, 0.0, 0.0, 1.0,
@@ -12,13 +16,14 @@ var colors   = [
     // 0.0, 1.0, 0.0, 1.0, // testing
     // 0.0, 1.0, 0.0, 1.0  // testing
 ];
+polygon_colors = [];
 
-// var triangle = [
-//     0.0, 0.0,
-//     0.0, -1.0,
-//     -1.0, 0.0,
-//     -1.0, -1.0,
-// ]
+ var triangle = [
+     0.0, 0.0,
+     0.0, -1.0,
+     -1.0, 0.0,
+     -1.0, -1.0,
+];
 
 
 
@@ -103,6 +108,53 @@ function main() {
         var count = Math.floor(vertices.length / 2);
         gl.drawArrays(primitiveType, offset, count);
 
+        //-- Temporary Polygon --
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(temp_polygon_vertices),
+            gl.STATIC_DRAW
+        );
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        
+        
+        var size = 2;
+        var type = gl.FLOAT;
+        var normalize = false;
+        var stride = 0;
+        var offset = 0;
+        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+        
+        if (temp_polygon_vertices.length <= 4) var primitiveType = gl.LINES;
+        else var primitiveType = gl.TRIANGLE_FAN;
+        var offset = 0;
+        var count = Math.floor(temp_polygon_vertices.length / 2);
+        gl.drawArrays(primitiveType, offset, count);
+
+        //-- Polygon --
+        for (let index = 0; index < polygon_vertices.length; index++) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(polygon_vertices[index]),
+                gl.STATIC_DRAW
+            );
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            
+            
+            var size = 2;
+            var type = gl.FLOAT;
+            var normalize = false;
+            var stride = 0;
+            var offset = 0;
+            gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+            
+            if (polygon_vertices[index].length < 4) var primitiveType = gl.LINES;
+            else var primitiveType = gl.TRIANGLE_FAN;
+            var offset = 0;
+            var count = Math.floor(polygon_vertices[index].length / 2);
+            gl.drawArrays(primitiveType, offset, count);
+        }
 
         // -- Triangle --
         // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -181,11 +233,67 @@ function line_hover_handler(e, gl, canvas) {
 // TODO : Tambah, hover opsional
 function rectangle_click_handler(e, gl, canvas) {}
 function rectangle_hover_handler(e, gl, canvas) {}
-function polygon_click_handler(e, gl, canvas) {}
-function polygon_hover_handler(e, gl, canvas) {}
+function polygon_click_handler(e, gl, canvas) {
+    var x    = e.clientX;
+    var y    = e.clientY;
+    var rect = e.target.getBoundingClientRect();
 
+    // Normalisasi antara 0 - 1
+    x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
+    temp_polygon_vertices.push(x);
+    temp_polygon_vertices.push(y);
 
+    polygon_colors.push(1.0);
+    polygon_colors.push(1.0);
+    polygon_colors.push(1.0);
+    polygon_colors.push(1.0);
+
+    if (temp_polygon_vertices.length == 8) {
+        let finalize_polygon_btn = document.createElement("button");
+        finalize_polygon_btn.innerHTML = "Finalize Polygon";
+        finalize_polygon_btn.onclick = function() { finalize_polygon() };
+        document.getElementById("polygon_helper").appendChild(finalize_polygon_btn)
+    }
+
+}
+
+function polygon_hover_handler(e, gl, canvas) {
+    var x    = e.clientX;
+    var y    = e.clientY;
+    var rect = e.target.getBoundingClientRect();
+
+    // Normalisasi antara 0 - 1
+    x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+
+    if (temp_polygon_vertices.length == 2 && !hover_draw_polygon) {
+        hover_draw_polygon = true;
+        temp_polygon_vertices.push(x);
+        temp_polygon_vertices.push(y);
+
+        polygon_colors.push(1.0);
+        polygon_colors.push(1.0);
+        polygon_colors.push(1.0);
+        polygon_colors.push(1.0);
+    }
+    else if (hover_draw_polygon) {
+        temp_polygon_vertices[temp_polygon_vertices.length-2] = x;
+        temp_polygon_vertices[temp_polygon_vertices.length-1] = y;
+    }
+}
+
+function finalize_polygon() {
+    temp_polygon_vertices.pop();
+    temp_polygon_vertices.pop();
+    hover_draw_polygon = false;
+
+    polygon_vertices.push(temp_polygon_vertices);
+    temp_polygon_vertices = [];
+
+    document.getElementById("polygon_helper").innerHTML = "";
+}
 
 // Button event handler
 function line_btn_handler() {
