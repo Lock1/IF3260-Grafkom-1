@@ -6,3 +6,6 @@
 3. https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html
 4. https://webglfundamentals.org/webgl/lessons/webgl-picking.html
 5. https://webglfundamentals.org/webgl/lessons/webgl-tips.html#tabindex
+
+## How to Use
+1. Untuk mengakhiri pembuatan polygon, anda dapat melakukan klik kanan atau menekan tombol Finalize Polygon

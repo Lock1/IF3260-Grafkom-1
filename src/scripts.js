@@ -234,21 +234,40 @@ function line_hover_handler(e, gl, canvas) {
 function rectangle_click_handler(e, gl, canvas) {}
 function rectangle_hover_handler(e, gl, canvas) {}
 function polygon_click_handler(e, gl, canvas) {
-    var x    = e.clientX;
-    var y    = e.clientY;
-    var rect = e.target.getBoundingClientRect();
+    var e = e || window.event;
+    var btnCode;
 
-    // Normalisasi antara 0 - 1
-    x = (2*(x - rect.left) - canvas.width) / canvas.width;
-    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+    if ('object' === typeof e) {
+        btnCode = e.button;
 
-    temp_polygon_vertices.push(x);
-    temp_polygon_vertices.push(y);
+        switch (btnCode) {
+        case 0:
+            var x    = e.clientX;
+            var y    = e.clientY;
+            var rect = e.target.getBoundingClientRect();
 
-    polygon_colors.push(1.0);
-    polygon_colors.push(1.0);
-    polygon_colors.push(1.0);
-    polygon_colors.push(1.0);
+            // Normalisasi antara 0 - 1
+            x = (2*(x - rect.left) - canvas.width) / canvas.width;
+            y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+
+            temp_polygon_vertices.push(x);
+            temp_polygon_vertices.push(y);
+
+            polygon_colors.push(1.0);
+            polygon_colors.push(1.0);
+            polygon_colors.push(1.0);
+            polygon_colors.push(1.0);
+            break;
+
+        case 1:
+            break;
+
+        case 2:
+            finalize_polygon();
+            break;
+
+        }
+    }
 
     if (temp_polygon_vertices.length == 8) {
         let finalize_polygon_btn = document.createElement("button");
