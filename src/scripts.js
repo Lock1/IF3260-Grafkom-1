@@ -319,11 +319,6 @@ function rectangle_click_handler(e, gl, canvas) {
     if (!hover_draw_rectangle) {
         temp_rectangle_vertices.push(x);
         temp_rectangle_vertices.push(y);
-
-        temp_rectangle_colors.push(picked_color[0]);
-        temp_rectangle_colors.push(picked_color[1]);
-        temp_rectangle_colors.push(picked_color[2]);
-        temp_rectangle_colors.push(1);
     }
     else{
         hover_draw_rectangle = false;
@@ -355,6 +350,10 @@ function rectangle_hover_handler(e, gl, canvas) {
         temp_rectangle_vertices.push(xi);
         temp_rectangle_vertices.push(y);
 
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
         temp_rectangle_colors.push(picked_color[0]);
         temp_rectangle_colors.push(picked_color[1]);
         temp_rectangle_colors.push(picked_color[2]);
