@@ -31,6 +31,8 @@ var temp_rectangle_vertices = [];
 var rectangle_colors = [];
 var temp_rectangle_colors = [];
 
+var picked_color = [1, 1, 1];
+
 
 
 function main() {
@@ -169,15 +171,26 @@ function main() {
             new Float32Array(temp_rectangle_vertices),
             gl.STATIC_DRAW
         );
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(temp_rectangle_colors),
+            gl.STATIC_DRAW
+        );
         gl.enableVertexAttribArray(positionAttributeLocation);
         
-        
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         var size = 2;
         var type = gl.FLOAT;
         var normalize = false;
         var stride = 0;
         var offset = 0;
         gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+        gl.enableVertexAttribArray(colorAttributeLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        var size = 4;
+        gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
         
         var primitiveType = gl.TRIANGLE_FAN;
         var offset = 0;
@@ -192,15 +205,26 @@ function main() {
                 new Float32Array(rectangle_vertices[index]),
                 gl.STATIC_DRAW
             );
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(rectangle_colors[index]),
+                gl.STATIC_DRAW
+            );
             gl.enableVertexAttribArray(positionAttributeLocation);
             
-            
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             var size = 2;
             var type = gl.FLOAT;
             var normalize = false;
             var stride = 0;
             var offset = 0;
             gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+    
+            gl.enableVertexAttribArray(colorAttributeLocation);
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            var size = 4;
+            gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
             
             var primitiveType = gl.TRIANGLE_FAN;
             var offset = 0;
@@ -296,10 +320,10 @@ function rectangle_click_handler(e, gl, canvas) {
         temp_rectangle_vertices.push(x);
         temp_rectangle_vertices.push(y);
 
-        temp_rectangle_colors.push(Math.random());
-        temp_rectangle_colors.push(Math.random());
-        temp_rectangle_colors.push(Math.random());
-        temp_rectangle_colors.push(Math.random());
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
     }
     else{
         hover_draw_rectangle = false;
@@ -331,10 +355,18 @@ function rectangle_hover_handler(e, gl, canvas) {
         temp_rectangle_vertices.push(xi);
         temp_rectangle_vertices.push(y);
 
-        temp_rectangle_colors.push(Math.random());
-        temp_rectangle_colors.push(Math.random());
-        temp_rectangle_colors.push(Math.random());
-        temp_rectangle_colors.push(Math.random());
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
     }
     else if (hover_draw_rectangle) {
         var x0 = temp_rectangle_vertices[temp_rectangle_vertices.length-8];
@@ -453,6 +485,18 @@ function select_btn_handler() {
     document.getElementById("mode").innerText = "Selection tool";
     canvas.onmousedown = null;
     canvas.onmousemove = null;
+}
+
+const hexToRgb = hex =>
+  hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+             ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+    .substring(1).match(/.{2}/g)
+    .map(x => parseInt(x, 16))
+
+function getColor() {
+    var hex = document.getElementById("color_picker").value;
+    rgb = hexToRgb(hex);
+    picked_color = [rgb[0]/255, rgb[1]/255, rgb[2]/255];
 }
 
 window.onload = main;
