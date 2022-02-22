@@ -1,261 +1,99 @@
 var canvas   = document.getElementById("c");
 var gl       = canvas.getContext("webgl");
-var hover_draw = false;
-var hover_draw_polygon = false;
+
+var hover_draw_line      = false;
+var hover_draw_polygon   = false;
 var hover_draw_rectangle = false;
-var vertices = [
-    // 0.0, 0.0,
-    // 0.5, 0.5
-];
 
-var polygon_vertices = []
+var vertices = [];
+var colors   = [];
+
+var polygon_vertices      = [];
 var temp_polygon_vertices = [];
+var polygon_colors        = [];
+var temp_polygon_colors   = [];
 
-var colors   = [
-    // 0.0, 0.0, 0.0, 1.0,
-    // 0.0, 1.0, 0.0, 1.0,
-    // 0.0, 1.0, 0.0, 1.0, // testing
-    // 0.0, 1.0, 0.0, 1.0  // testing
-];
-polygon_colors = [];
-
- var triangle = [
-     0.0, 0.0,
-     0.0, -1.0,
-     -1.0, 0.0,
-     -1.0, -1.0,
-];
-
-var rectangle_vertices = [];
+var rectangle_vertices      = [];
 var temp_rectangle_vertices = [];
-var rectangle_colors = [];
-var temp_rectangle_colors = [];
+var rectangle_colors        = [];
+var temp_rectangle_colors   = [];
 
-var picked_color = [1, 1, 1];
+var picked_color = [1.0, 1.0, 1.0, 1.0];
 
 
 
 function main() {
     var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader", "fragment-shader"]);
+    canvas.addEventListener("keydown", (e) => {console.log(e.keyCode)}); // DEBUG
 
     var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
     var colorAttributeLocation    = gl.getAttribLocation(program, "a_color");
 
     var positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(vertices),
-        gl.STATIC_DRAW
-    );
+    var colorBuffer    = gl.createBuffer();
 
-    var colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(colors),
-        gl.STATIC_DRAW
-    );
-
-    // Keyword referensi : JS mouse event handler
-    hover_draw = false;
-    canvas.onmousedown = function (e) { line_click_handler(e, gl, canvas) };
-    canvas.onmousemove = function (e) { line_hover_handler(e, gl, canvas) };
-
+    hover_draw_line = false;
+    line_btn_handler();
     drawScene();
+
+    function set_gl_pos_color_buf(vertex_buf, color_buf) {
+        bind_gl_buffer(gl, positionBuffer, vertex_buf);
+        set_bind_ptr_gl(gl, positionAttributeLocation, positionBuffer, 2);
+
+        bind_gl_buffer(gl, colorBuffer, color_buf);
+        set_bind_ptr_gl(gl, colorAttributeLocation, colorBuffer, 4);
+    }
 
     function drawScene() {
         webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-
-        // -- Line --
-        // Update vertex buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            new Float32Array(vertices),
-            gl.STATIC_DRAW
-        );
-
-        // Update color buffer
-        colorBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            new Float32Array(colors),
-            gl.STATIC_DRAW
-        );
-
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.useProgram(program);
-
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.DEPTH_TEST);
 
-        gl.enableVertexAttribArray(positionAttributeLocation);
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        // -- Line --
+        // Update vertex & color buffer
+        set_gl_pos_color_buf(vertices, colors);
 
-        var size = 2;
-        var type = gl.FLOAT;
-        var normalize = false;
-        var stride = 0;
-        var offset = 0;
-        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
-
-        gl.enableVertexAttribArray(colorAttributeLocation);
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        var size = 4;
-        gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
-
-        var primitiveType = gl.LINES;
-        var offset = 0;
         var count = Math.floor(vertices.length / 2);
-        gl.drawArrays(primitiveType, offset, count);
+        gl.drawArrays(gl.LINES, 0, count);
 
-        //-- Temporary Polygon --
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            new Float32Array(temp_polygon_vertices),
-            gl.STATIC_DRAW
-        );
-        gl.enableVertexAttribArray(positionAttributeLocation);
-        
-        
-        var size = 2;
-        var type = gl.FLOAT;
-        var normalize = false;
-        var stride = 0;
-        var offset = 0;
-        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
-        
-        if (temp_polygon_vertices.length <= 4) var primitiveType = gl.LINES;
-        else var primitiveType = gl.TRIANGLE_FAN;
-        var offset = 0;
+        // -- Temporary Polygon --
+        set_gl_pos_color_buf(temp_polygon_vertices, temp_polygon_colors);
+
+        var primitiveType = (temp_polygon_vertices.length < 4) ? gl.LINES : gl.TRIANGLE_FAN;
         var count = Math.floor(temp_polygon_vertices.length / 2);
-        gl.drawArrays(primitiveType, offset, count);
+        gl.drawArrays(primitiveType, 0, count);
 
-        //-- Polygon --
-        for (let index = 0; index < polygon_vertices.length; index++) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                new Float32Array(polygon_vertices[index]),
-                gl.STATIC_DRAW
-            );
-            gl.enableVertexAttribArray(positionAttributeLocation);
-            
-            
-            var size = 2;
-            var type = gl.FLOAT;
-            var normalize = false;
-            var stride = 0;
-            var offset = 0;
-            gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
-            
-            if (polygon_vertices[index].length < 4) var primitiveType = gl.LINES;
-            else var primitiveType = gl.TRIANGLE_FAN;
-            var offset = 0;
-            var count = Math.floor(polygon_vertices[index].length / 2);
-            gl.drawArrays(primitiveType, offset, count);
+        // -- Polygon --
+        for (let i = 0; i < polygon_vertices.length; i++) {
+            set_gl_pos_color_buf(polygon_vertices[i], polygon_colors[i]);
+
+            var primitiveType = (polygon_vertices[i].length < 4) ? gl.LINES : gl.TRIANGLE_FAN;
+            var count = Math.floor(polygon_vertices[i].length / 2);
+            gl.drawArrays(primitiveType, 0, count);
         }
 
-        //-- Temporary Rectangle --
-        gl.useProgram(program);
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            new Float32Array(temp_rectangle_vertices),
-            gl.STATIC_DRAW
-        );
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            new Float32Array(temp_rectangle_colors),
-            gl.STATIC_DRAW
-        );
-        gl.enableVertexAttribArray(positionAttributeLocation);
-        
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        var size = 2;
-        var type = gl.FLOAT;
-        var normalize = false;
-        var stride = 0;
-        var offset = 0;
-        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+        // -- Temporary Rectangle --
+        set_gl_pos_color_buf(temp_rectangle_vertices, temp_rectangle_colors);
 
-        gl.enableVertexAttribArray(colorAttributeLocation);
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        var size = 4;
-        gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
-        
-        var primitiveType = gl.TRIANGLE_FAN;
-        var offset = 0;
         var count = Math.floor(temp_rectangle_vertices.length / 2);
-        gl.drawArrays(primitiveType, offset, count);
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
 
-        //-- Rectangle --
-        for (let index = 0; index < rectangle_vertices.length; index++) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                new Float32Array(rectangle_vertices[index]),
-                gl.STATIC_DRAW
-            );
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                new Float32Array(rectangle_colors[index]),
-                gl.STATIC_DRAW
-            );
-            gl.enableVertexAttribArray(positionAttributeLocation);
-            
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            var size = 2;
-            var type = gl.FLOAT;
-            var normalize = false;
-            var stride = 0;
-            var offset = 0;
-            gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
-    
-            gl.enableVertexAttribArray(colorAttributeLocation);
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            var size = 4;
-            gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
-            
-            var primitiveType = gl.TRIANGLE_FAN;
-            var offset = 0;
-            var count = Math.floor(rectangle_vertices[index].length / 2);
-            gl.drawArrays(primitiveType, offset, count);
+        // -- Rectangle --
+        for (let i = 0; i < rectangle_vertices.length; i++) {
+            set_gl_pos_color_buf(rectangle_vertices[i], rectangle_colors[i]);
+
+            var count = Math.floor(rectangle_vertices[i].length / 2);
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
         }
-
-        // -- Triangle --
-        // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        // gl.bufferData(
-        //     gl.ARRAY_BUFFER,
-        //     new Float32Array(triangle),
-        //     gl.STATIC_DRAW
-        // );
-        // gl.enableVertexAttribArray(positionAttributeLocation);
-        //
-        //
-        // var size = 2;
-        // var type = gl.FLOAT;
-        // var normalize = false;
-        // var stride = 0;
-        // var offset = 0;
-        // gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
-        //
-        // gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         window.requestAnimationFrame(drawScene);
     }
 }
-
-
 
 
 // Line tool event handler
@@ -268,17 +106,16 @@ function line_click_handler(e, gl, canvas) {
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
-    if (!hover_draw) {
+    if (!hover_draw_line) {
         vertices.push(x);
         vertices.push(y);
 
-        colors.push(1.0);
-        colors.push(1.0);
-        colors.push(1.0);
-        colors.push(1.0);
+        picked_color.forEach((item, i) => {
+            colors.push(item);
+        });
     }
     else
-        hover_draw = false;
+        hover_draw_line = false;
 }
 
 function line_hover_handler(e, gl, canvas) {
@@ -290,23 +127,21 @@ function line_hover_handler(e, gl, canvas) {
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
-    if (vertices.length % 4 == 2 && !hover_draw) {
-        hover_draw = true;
+    if (vertices.length % 4 == 2 && !hover_draw_line) {
+        hover_draw_line = true;
         vertices.push(x);
         vertices.push(y);
 
-        colors.push(1.0);
-        colors.push(1.0);
-        colors.push(1.0);
-        colors.push(1.0);
+        picked_color.forEach((item, i) => {
+            colors.push(item);
+        });
     }
-    else if (hover_draw) {
+    else if (hover_draw_line) {
         vertices[vertices.length-2] = x;
         vertices[vertices.length-1] = y;
     }
 }
 
-// TODO : Tambah, hover opsional
 function rectangle_click_handler(e, gl, canvas) {
     var x    = e.clientX;
     var y    = e.clientY;
@@ -319,13 +154,17 @@ function rectangle_click_handler(e, gl, canvas) {
     if (!hover_draw_rectangle) {
         temp_rectangle_vertices.push(x);
         temp_rectangle_vertices.push(y);
+
+        picked_color.forEach((item, i) => {
+            temp_rectangle_colors.push(item);
+        });
     }
-    else{
+    else {
         hover_draw_rectangle = false;
         rectangle_vertices.push(temp_rectangle_vertices);
         rectangle_colors.push(temp_rectangle_colors);
         temp_rectangle_vertices = [];
-        temp_rectangle_colors = [];
+        temp_rectangle_colors   = [];
     }
 
 }
@@ -377,7 +216,6 @@ function rectangle_hover_handler(e, gl, canvas) {
         temp_rectangle_vertices[temp_rectangle_vertices.length-2] = x;
         temp_rectangle_vertices[temp_rectangle_vertices.length-1] = y0;
     }
-    
 }
 
 function polygon_click_handler(e, gl, canvas) {
@@ -400,10 +238,10 @@ function polygon_click_handler(e, gl, canvas) {
             temp_polygon_vertices.push(x);
             temp_polygon_vertices.push(y);
 
-            polygon_colors.push(1.0);
-            polygon_colors.push(1.0);
-            polygon_colors.push(1.0);
-            polygon_colors.push(1.0);
+            picked_color.forEach((item, i) => {
+                temp_polygon_colors.push(item);
+            });
+
             break;
 
         case 1:
@@ -439,10 +277,9 @@ function polygon_hover_handler(e, gl, canvas) {
         temp_polygon_vertices.push(x);
         temp_polygon_vertices.push(y);
 
-        polygon_colors.push(1.0);
-        polygon_colors.push(1.0);
-        polygon_colors.push(1.0);
-        polygon_colors.push(1.0);
+        picked_color.forEach((item, i) => {
+            temp_polygon_colors.push(item);
+        });
     }
     else if (hover_draw_polygon) {
         temp_polygon_vertices[temp_polygon_vertices.length-2] = x;
@@ -451,15 +288,21 @@ function polygon_hover_handler(e, gl, canvas) {
 }
 
 function finalize_polygon() {
-    temp_polygon_vertices.pop();
-    temp_polygon_vertices.pop();
     hover_draw_polygon = false;
+    temp_polygon_vertices.pop();
+    temp_polygon_vertices.pop();
+    for (let i = 0; i < 4; i++)
+        temp_polygon_colors.pop();
 
     polygon_vertices.push(temp_polygon_vertices);
+    polygon_colors.push(temp_polygon_colors);
     temp_polygon_vertices = [];
+    temp_polygon_colors   = [];
 
     document.getElementById("polygon_helper").innerHTML = "";
 }
+
+
 
 // Button event handler
 function line_btn_handler() {
@@ -495,7 +338,7 @@ const hexToRgb = hex =>
 function getColor() {
     var hex = document.getElementById("color_picker").value;
     rgb = hexToRgb(hex);
-    picked_color = [rgb[0]/255, rgb[1]/255, rgb[2]/255];
+    picked_color = [rgb[0]/255, rgb[1]/255, rgb[2]/255, 1.0];
 }
 
 window.onload = main;
