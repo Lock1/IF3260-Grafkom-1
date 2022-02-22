@@ -5,17 +5,27 @@ var hover_draw_line      = false;
 var hover_draw_polygon   = false;
 var hover_draw_rectangle = false;
 
-var vertices = [];
-var colors   = [];
+var gl_objects = {
+    line: {
+        vertices: [],
+        colors: []
+    },
 
-var polygon_vertices      = [];
+    polygon: {
+        vertices: [],
+        colors: []
+    },
+
+    rectangle: {
+        vertices: [],
+        colors: []
+    }
+}
+
 var temp_polygon_vertices = [];
-var polygon_colors        = [];
 var temp_polygon_colors   = [];
 
-var rectangle_vertices      = [];
 var temp_rectangle_vertices = [];
-var rectangle_colors        = [];
 var temp_rectangle_colors   = [];
 
 var picked_color = [1.0, 1.0, 1.0, 1.0];
@@ -24,6 +34,7 @@ var picked_color = [1.0, 1.0, 1.0, 1.0];
 
 function main() {
     var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader", "fragment-shader"]);
+    var selector_program = webglUtils.createProgramFromScripts(gl, ["select-vx-shader", "select-fg-shader"]);
     canvas.addEventListener("keydown", (e) => {console.log(e.keyCode)}); // DEBUG
 
     var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
@@ -56,9 +67,9 @@ function main() {
 
         // -- Line --
         // Update vertex & color buffer
-        set_gl_pos_color_buf(vertices, colors);
+        set_gl_pos_color_buf(gl_objects.line.vertices, gl_objects.line.colors);
 
-        var count = Math.floor(vertices.length / 2);
+        var count = Math.floor(gl_objects.line.vertices.length / 2);
         gl.drawArrays(gl.LINES, 0, count);
 
         // -- Temporary Polygon --
@@ -69,11 +80,11 @@ function main() {
         gl.drawArrays(primitiveType, 0, count);
 
         // -- Polygon --
-        for (let i = 0; i < polygon_vertices.length; i++) {
-            set_gl_pos_color_buf(polygon_vertices[i], polygon_colors[i]);
+        for (let i = 0; i < gl_objects.polygon.vertices.length; i++) {
+            set_gl_pos_color_buf(gl_objects.polygon.vertices[i], gl_objects.polygon.colors[i]);
 
-            var primitiveType = (polygon_vertices[i].length < 4) ? gl.LINES : gl.TRIANGLE_FAN;
-            var count = Math.floor(polygon_vertices[i].length / 2);
+            var primitiveType = (gl_objects.polygon.vertices[i].length < 4) ? gl.LINES : gl.TRIANGLE_FAN;
+            var count = Math.floor(gl_objects.polygon.vertices[i].length / 2);
             gl.drawArrays(primitiveType, 0, count);
         }
 
@@ -84,10 +95,10 @@ function main() {
         gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
 
         // -- Rectangle --
-        for (let i = 0; i < rectangle_vertices.length; i++) {
-            set_gl_pos_color_buf(rectangle_vertices[i], rectangle_colors[i]);
+        for (let i = 0; i < gl_objects.rectangle.vertices.length; i++) {
+            set_gl_pos_color_buf(gl_objects.rectangle.vertices[i], gl_objects.rectangle.colors[i]);
 
-            var count = Math.floor(rectangle_vertices[i].length / 2);
+            var count = Math.floor(gl_objects.rectangle.vertices[i].length / 2);
             gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
         }
 
@@ -96,7 +107,7 @@ function main() {
 }
 
 
-// Line tool event handler
+// Tool event handler
 function line_click_handler(e, gl, canvas) {
     var x    = e.clientX;
     var y    = e.clientY;
@@ -107,11 +118,11 @@ function line_click_handler(e, gl, canvas) {
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
     if (!hover_draw_line) {
-        vertices.push(x);
-        vertices.push(y);
+        gl_objects.line.vertices.push(x);
+        gl_objects.line.vertices.push(y);
 
         picked_color.forEach((item, i) => {
-            colors.push(item);
+            gl_objects.line.colors.push(item);
         });
     }
     else
@@ -127,18 +138,18 @@ function line_hover_handler(e, gl, canvas) {
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
-    if (vertices.length % 4 == 2 && !hover_draw_line) {
+    if (gl_objects.line.vertices.length % 4 == 2 && !hover_draw_line) {
         hover_draw_line = true;
-        vertices.push(x);
-        vertices.push(y);
+        gl_objects.line.vertices.push(x);
+        gl_objects.line.vertices.push(y);
 
         picked_color.forEach((item, i) => {
-            colors.push(item);
+            gl_objects.line.colors.push(item);
         });
     }
     else if (hover_draw_line) {
-        vertices[vertices.length-2] = x;
-        vertices[vertices.length-1] = y;
+        gl_objects.line.vertices[gl_objects.line.vertices.length-2] = x;
+        gl_objects.line.vertices[gl_objects.line.vertices.length-1] = y;
     }
 }
 
@@ -161,8 +172,8 @@ function rectangle_click_handler(e, gl, canvas) {
     }
     else {
         hover_draw_rectangle = false;
-        rectangle_vertices.push(temp_rectangle_vertices);
-        rectangle_colors.push(temp_rectangle_colors);
+        gl_objects.rectangle.vertices.push(temp_rectangle_vertices);
+        gl_objects.rectangle.colors.push(temp_rectangle_colors);
         temp_rectangle_vertices = [];
         temp_rectangle_colors   = [];
     }
@@ -294,13 +305,29 @@ function finalize_polygon() {
     for (let i = 0; i < 4; i++)
         temp_polygon_colors.pop();
 
-    polygon_vertices.push(temp_polygon_vertices);
-    polygon_colors.push(temp_polygon_colors);
+    gl_objects.polygon.vertices.push(temp_polygon_vertices);
+    gl_objects.polygon.colors.push(temp_polygon_colors);
     temp_polygon_vertices = [];
     temp_polygon_colors   = [];
 
     document.getElementById("polygon_helper").innerHTML = "";
 }
+
+function select_hover_handler(e, gl, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    var mX = e.clientX - rect.left;
+    var mY = e.clientY - rect.top;
+
+    const pX = mX * gl.canvas.width / gl.canvas.clientWidth;
+    const pY = gl.canvas.height - mY * gl.canvas.height / gl.canvas.clientHeight - 1;
+    const data = new Uint8Array(4);
+    gl.readPixels(
+        pX, pY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data
+    );
+    console.log(pX, pY, data);
+
+}
+
 
 
 
@@ -326,8 +353,11 @@ function polygon_btn_handler() {
 function select_btn_handler() {
     document.getElementById("mode").innerText = "Selection tool";
     canvas.onmousedown = null;
-    canvas.onmousemove = null;
+    canvas.onmousemove = function (e) { select_hover_handler(e, gl, canvas) };
 }
+
+
+
 
 const hexToRgb = hex =>
   hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
