@@ -1,10 +1,6 @@
 var canvas   = document.getElementById("c");
 var gl       = canvas.getContext("webgl");
 
-var hover_draw_line      = false;
-var hover_draw_polygon   = false;
-var hover_draw_rectangle = false;
-
 var gl_objects = {
     line: {
         vertices: [],
@@ -12,15 +8,20 @@ var gl_objects = {
     },
 
     polygon: {
-        vertices: [],
-        colors: []
+        shape: [],
+        shape_color: []
     },
 
     rectangle: {
-        vertices: [],
-        colors: []
+        shape: [],
+        shape_color: []
     }
 }
+
+
+var hover_draw_line      = false;
+var hover_draw_polygon   = false;
+var hover_draw_rectangle = false;
 
 var temp_polygon_vertices = [];
 var temp_polygon_colors   = [];
@@ -60,47 +61,39 @@ function main() {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.useProgram(program);
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.DEPTH_TEST);
 
+        gl.useProgram(program);
         // -- Line --
         // Update vertex & color buffer
         set_gl_pos_color_buf(gl_objects.line.vertices, gl_objects.line.colors);
-
         var count = Math.floor(gl_objects.line.vertices.length / 2);
         gl.drawArrays(gl.LINES, 0, count);
 
+        // -- Polygon --
+        for (let i = 0; i < gl_objects.polygon.shape.length; i++) {
+            set_gl_pos_color_buf(gl_objects.polygon.shape[i], gl_objects.polygon.shape_color[i]);
+            var count = Math.floor(gl_objects.polygon.shape[i].length / 2);
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
+        }
+
+        // -- Rectangle --
+        for (let i = 0; i < gl_objects.rectangle.shape.length; i++) {
+            set_gl_pos_color_buf(gl_objects.rectangle.shape[i], gl_objects.rectangle.shape_color[i]);
+            var count = Math.floor(gl_objects.rectangle.shape[i].length / 2);
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
+        }
+
         // -- Temporary Polygon --
         set_gl_pos_color_buf(temp_polygon_vertices, temp_polygon_colors);
-
-        var primitiveType = (temp_polygon_vertices.length < 4) ? gl.LINES : gl.TRIANGLE_FAN;
         var count = Math.floor(temp_polygon_vertices.length / 2);
-        gl.drawArrays(primitiveType, 0, count);
-
-        // -- Polygon --
-        for (let i = 0; i < gl_objects.polygon.vertices.length; i++) {
-            set_gl_pos_color_buf(gl_objects.polygon.vertices[i], gl_objects.polygon.colors[i]);
-
-            var primitiveType = (gl_objects.polygon.vertices[i].length < 4) ? gl.LINES : gl.TRIANGLE_FAN;
-            var count = Math.floor(gl_objects.polygon.vertices[i].length / 2);
-            gl.drawArrays(primitiveType, 0, count);
-        }
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
 
         // -- Temporary Rectangle --
         set_gl_pos_color_buf(temp_rectangle_vertices, temp_rectangle_colors);
-
         var count = Math.floor(temp_rectangle_vertices.length / 2);
         gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
-
-        // -- Rectangle --
-        for (let i = 0; i < gl_objects.rectangle.vertices.length; i++) {
-            set_gl_pos_color_buf(gl_objects.rectangle.vertices[i], gl_objects.rectangle.colors[i]);
-
-            var count = Math.floor(gl_objects.rectangle.vertices[i].length / 2);
-            gl.drawArrays(gl.TRIANGLE_FAN, 0, count);
-        }
 
         window.requestAnimationFrame(drawScene);
     }
@@ -172,8 +165,8 @@ function rectangle_click_handler(e, gl, canvas) {
     }
     else {
         hover_draw_rectangle = false;
-        gl_objects.rectangle.vertices.push(temp_rectangle_vertices);
-        gl_objects.rectangle.colors.push(temp_rectangle_colors);
+        gl_objects.rectangle.shape.push(temp_rectangle_vertices);
+        gl_objects.rectangle.shape_color.push(temp_rectangle_colors);
         temp_rectangle_vertices = [];
         temp_rectangle_colors   = [];
     }
@@ -305,8 +298,8 @@ function finalize_polygon() {
     for (let i = 0; i < 4; i++)
         temp_polygon_colors.pop();
 
-    gl_objects.polygon.vertices.push(temp_polygon_vertices);
-    gl_objects.polygon.colors.push(temp_polygon_colors);
+    gl_objects.polygon.shape.push(temp_polygon_vertices);
+    gl_objects.polygon.shape_color.push(temp_polygon_colors);
     temp_polygon_vertices = [];
     temp_polygon_colors   = [];
 
