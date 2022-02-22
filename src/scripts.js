@@ -2,6 +2,7 @@ var canvas   = document.getElementById("c");
 var gl       = canvas.getContext("webgl");
 var hover_draw = false;
 var hover_draw_polygon = false;
+var hover_draw_rectangle = false;
 var vertices = [
     // 0.0, 0.0,
     // 0.5, 0.5
@@ -25,6 +26,12 @@ polygon_colors = [];
      -1.0, -1.0,
 ];
 
+var rectangle_vertices = [];
+var temp_rectangle_vertices = [];
+var rectangle_colors = [];
+var temp_rectangle_colors = [];
+
+var picked_color = [1, 1, 1];
 
 
 
@@ -156,6 +163,75 @@ function main() {
             gl.drawArrays(primitiveType, offset, count);
         }
 
+        //-- Temporary Rectangle --
+        gl.useProgram(program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(temp_rectangle_vertices),
+            gl.STATIC_DRAW
+        );
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(temp_rectangle_colors),
+            gl.STATIC_DRAW
+        );
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        var size = 2;
+        var type = gl.FLOAT;
+        var normalize = false;
+        var stride = 0;
+        var offset = 0;
+        gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+
+        gl.enableVertexAttribArray(colorAttributeLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        var size = 4;
+        gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+        
+        var primitiveType = gl.TRIANGLE_FAN;
+        var offset = 0;
+        var count = Math.floor(temp_rectangle_vertices.length / 2);
+        gl.drawArrays(primitiveType, offset, count);
+
+        //-- Rectangle --
+        for (let index = 0; index < rectangle_vertices.length; index++) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(rectangle_vertices[index]),
+                gl.STATIC_DRAW
+            );
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(rectangle_colors[index]),
+                gl.STATIC_DRAW
+            );
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            var size = 2;
+            var type = gl.FLOAT;
+            var normalize = false;
+            var stride = 0;
+            var offset = 0;
+            gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+    
+            gl.enableVertexAttribArray(colorAttributeLocation);
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            var size = 4;
+            gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+            
+            var primitiveType = gl.TRIANGLE_FAN;
+            var offset = 0;
+            var count = Math.floor(rectangle_vertices[index].length / 2);
+            gl.drawArrays(primitiveType, offset, count);
+        }
+
         // -- Triangle --
         // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         // gl.bufferData(
@@ -231,8 +307,79 @@ function line_hover_handler(e, gl, canvas) {
 }
 
 // TODO : Tambah, hover opsional
-function rectangle_click_handler(e, gl, canvas) {}
-function rectangle_hover_handler(e, gl, canvas) {}
+function rectangle_click_handler(e, gl, canvas) {
+    var x    = e.clientX;
+    var y    = e.clientY;
+    var rect = e.target.getBoundingClientRect();
+
+    // Normalisasi antara 0 - 1
+    x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+
+    if (!hover_draw_rectangle) {
+        temp_rectangle_vertices.push(x);
+        temp_rectangle_vertices.push(y);
+    }
+    else{
+        hover_draw_rectangle = false;
+        rectangle_vertices.push(temp_rectangle_vertices);
+        rectangle_colors.push(temp_rectangle_colors);
+        temp_rectangle_vertices = [];
+        temp_rectangle_colors = [];
+    }
+
+}
+
+function rectangle_hover_handler(e, gl, canvas) {
+    var x    = e.clientX;
+    var y    = e.clientY;
+    var rect = e.target.getBoundingClientRect();
+
+    // Normalisasi antara 0 - 1
+    x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+
+    if (temp_rectangle_vertices.length % 8 == 2 && !hover_draw_rectangle) {
+        hover_draw_rectangle = true;
+        var xi = temp_rectangle_vertices[temp_rectangle_vertices.length-2];
+        var yi = temp_rectangle_vertices[temp_rectangle_vertices.length-1];
+        temp_rectangle_vertices.push(x);
+        temp_rectangle_vertices.push(yi);
+        temp_rectangle_vertices.push(xi);
+        temp_rectangle_vertices.push(yi);
+        temp_rectangle_vertices.push(xi);
+        temp_rectangle_vertices.push(y);
+
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
+        temp_rectangle_colors.push(picked_color[0]);
+        temp_rectangle_colors.push(picked_color[1]);
+        temp_rectangle_colors.push(picked_color[2]);
+        temp_rectangle_colors.push(1);
+    }
+    else if (hover_draw_rectangle) {
+        var x0 = temp_rectangle_vertices[temp_rectangle_vertices.length-8];
+        var y0 = temp_rectangle_vertices[temp_rectangle_vertices.length-7];
+        temp_rectangle_vertices[temp_rectangle_vertices.length-6] = x0;
+        temp_rectangle_vertices[temp_rectangle_vertices.length-5] = y;
+        temp_rectangle_vertices[temp_rectangle_vertices.length-4] = x;
+        temp_rectangle_vertices[temp_rectangle_vertices.length-3] = y;
+        temp_rectangle_vertices[temp_rectangle_vertices.length-2] = x;
+        temp_rectangle_vertices[temp_rectangle_vertices.length-1] = y0;
+    }
+    
+}
+
 function polygon_click_handler(e, gl, canvas) {
     var e = e || window.event;
     var btnCode;
@@ -337,6 +484,18 @@ function select_btn_handler() {
     document.getElementById("mode").innerText = "Selection tool";
     canvas.onmousedown = null;
     canvas.onmousemove = null;
+}
+
+const hexToRgb = hex =>
+  hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+             ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+    .substring(1).match(/.{2}/g)
+    .map(x => parseInt(x, 16))
+
+function getColor() {
+    var hex = document.getElementById("color_picker").value;
+    rgb = hexToRgb(hex);
+    picked_color = [rgb[0]/255, rgb[1]/255, rgb[2]/255];
 }
 
 window.onload = main;
