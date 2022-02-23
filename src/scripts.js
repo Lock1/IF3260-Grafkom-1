@@ -522,7 +522,19 @@ function bucket_btn_handler() {
     canvas.onmousemove = null;
 }
 
+var help = document.getElementById("help");
 
+function help_btn_handler() {
+    if(help.style.display == "block"){
+        help.style.display = "none";
+    } else{
+        help.style.display = "block";
+    }
+}
+
+function close_btn_handler(){
+    help.style.display = "none";
+}
 
 
 const hexToRgb = hex =>
@@ -555,6 +567,5 @@ function load() {
         gl_objects = JSON.parse(e.target.result);
     };
 }
-
 
 window.onload = main;

@@ -3,25 +3,94 @@
     <head>
         <meta charset="utf-8">
         <title>Tugas Besar 1</title>
+        <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <canvas tabindex="0" id="c" width="500vw" height="500vh" display="block"></canvas>
+        <section class="center">
+            <canvas tabindex="0" id="c" width="500vw" height="500vh" display="block"></canvas>
+        </section>
+        <section class="center">
+            <p id="mode">Line tool</p>
+            <div id="shape_draw">
+                <button onclick="help_btn_handler()">Help</button>
+                <button onclick="line_btn_handler()">Line</button>
+                <button onclick="rectangle_btn_handler()">Rectangle</button>
+                <button onclick="polygon_btn_handler()">Polygon</button>
+                <button onclick="select_btn_handler()">Select</button>
+                <button onclick="bucket_btn_handler()">Bucket</button>
+                <input type="color" id="color_picker" onchange="getColor()" value="#ffffff">
+            </div>
+        </section>
+        <section class="center">
+            <div id="polygon_helper"></div>
+        </section>
+        <section class="center">
+            <div>
+                <button onclick="save()">Save</button>
+                <input type="file" id="load_src" accept="txt">
+                <button onclick="load()">Load</button>
+            </div>
+        </section>
+        <div id="help" class="help">
+            <div class="help-content">
+                <span class="close" onclick="close_btn_handler()">&times;</span>
+                <h2>Menggambar Garis</h2>
+                <ol>
+                    <li>Klik tombol Line</li>
+                    <li>Pilih dua titik pada canvas</li>
+                </ol>
 
-        <p id="mode">Line tool</p>
-        <div id="shape_draw">
-            <button onclick="line_btn_handler()">Line</button>
-            <button onclick="rectangle_btn_handler()">Rectangle</button>
-            <button onclick="polygon_btn_handler()">Polygon</button>
-            <button onclick="select_btn_handler()">Select</button>
-            <button onclick="bucket_btn_handler()">Bucket</button>
+                <h2>Menggambar Persegi</h2>
+                <ol>
+                    <li>Klik tombol Rectangle</li>
+                    <li>Pilih satu titik pada canvas</li>
+                    <li>Atur panjang dan lebar dari persegi dengan menggerakkan mouse</li>
+                    <li>Jika sudah sesuai klik pada canvas</li>
+                </ol>
+
+                <h2>Menggambar Polygon</h2>
+                <ol>
+                    <li>Klik tombol Polygon</li>
+                    <li>Pilih titik-titik polygon pada canvas</li>
+                    <li>Jika poligon sudah selesai digambar klik kanan pada canvas atau bisa mengklik tombol finalize polygon</li>
+                </ol>
+
+                <h2>Menyimpan Model</h2>
+                <ol>
+                    <li>Klik tombol Save untuk menyimpan model yang telah digambar</li>
+                </ol>
+
+                <h2>Memuat Model</h2>
+                <ol>
+                    <li>Klik tombol Pilih File</li>
+                    <li>Pilih model yang ingin dimuat</li>
+                    <li>Setelah model terpilih klik tombol Load</li>
+                </ol>
+
+                <h2>Memilih Warna Shape</h2>
+                <ol>
+                    <li>Klik tombol Color Picker yang berada di sebelah tombol Bucket</li>
+                    <li>Pilih warna yang diinginkan</li>
+                    <li>Gambar shape yang diinginkan</li>
+                </ol>
+
+                <h2>Mengubah Warna Shape</h2>
+                <ol>
+                    <li>Klik tombol Bucket</li>
+                    <li>Klik salah satu vertex pada shape yang warnanya ingin diubah</li>
+                    <li>Klik semua vertex pada pada shape tersebut agar warna shape tersebut berubah</li>
+                </ol>
+
+                <h2>Menggeser Titik Kontrol/Simpul dengan Mouse</h2>
+                <ol>
+                    <li>Klik tombol Select</li>
+                    <li>Klik salah satu vertex pada shape yang simpulnya ingin digeser</li>
+                    <li>Atur pergeseran simpul dengan menggerakkan mouse</li>
+                    <li>Jika telah sesuai klik pada canvas</li>
+                </ol>
+            </div>
+            
         </div>
-        <input type="color" id="color_picker" onchange="getColor()" value="#ffffff">
-        <div>
-            <button onclick="save()">Save</button>
-            <input type="file" id="load_src" accept="txt">
-            <button onclick="load()">Load</button>
-        </div>
-        <div id="polygon_helper"></div>
     </body>
 
     <script id="vertex-shader" type="notjs">
