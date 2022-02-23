@@ -18,6 +18,8 @@ var gl_objects = {
     }
 }
 
+const selection_radius = 0.05;
+
 
 var hover_draw_line      = false;
 var hover_draw_polygon   = false;
@@ -351,8 +353,42 @@ function select_hover_handler(e, gl, canvas) {
                 gl_objects.line.vertices[selection_index + 1] = y;
                 break;
             case 1:
+                var opposite_index = -1;
+                switch (selection_index) {
+                    case 0:
+                        opposite_index = 4;
+                        break;
+                    case 2:
+                        opposite_index = 6;
+                        break;
+                    case 4:
+                        opposite_index = 0;
+                        break;
+                    case 6:
+                        opposite_index = 2;
+                        break;
+                }
+                console.log(opposite_index)
                 gl_objects.rectangle.shape[selection_sh_idx][selection_index] = x;
                 gl_objects.rectangle.shape[selection_sh_idx][selection_index + 1] = y;
+
+                let first_set = true;
+                for (let i = 0; i < 8; i += 2) {
+                    if (i != selection_index && i != opposite_index) {
+                        if (first_set) {
+                            gl_objects.rectangle.shape[selection_sh_idx][i] =
+                                gl_objects.rectangle.shape[selection_sh_idx][opposite_index];
+                            gl_objects.rectangle.shape[selection_sh_idx][i + 1] = y;
+                            first_set = false;
+                        }
+                        else {
+                            gl_objects.rectangle.shape[selection_sh_idx][i] = x;
+                            gl_objects.rectangle.shape[selection_sh_idx][i + 1] =
+                                gl_objects.rectangle.shape[selection_sh_idx][opposite_index + 1];
+                        }
+
+                    }
+                }
                 break;
             case 2:
                 gl_objects.polygon.shape[selection_sh_idx][selection_index] = x;
@@ -377,7 +413,7 @@ function select_click_handler(e, gl, canvas) {
     }
     else {
         for (let i = 0; selection_shape == -1 && i < gl_objects.line.vertices.length; i += 2) {
-            if (e_dis(x, y, gl_objects.line.vertices[i], gl_objects.line.vertices[i+1]) < 0.1) {
+            if (e_dis(x, y, gl_objects.line.vertices[i], gl_objects.line.vertices[i+1]) < selection_radius) {
                 selection_shape = 0;
                 selection_index = i;
             }
@@ -385,7 +421,7 @@ function select_click_handler(e, gl, canvas) {
 
         for (let i = 0; selection_shape == -1 && i < gl_objects.rectangle.shape.length; i++) {
             for (let j = 0; selection_shape == -1 && j < gl_objects.rectangle.shape[i].length; j++) {
-                if (e_dis(x, y, gl_objects.rectangle.shape[i][j], gl_objects.rectangle.shape[i][j+1]) < 0.1) {
+                if (e_dis(x, y, gl_objects.rectangle.shape[i][j], gl_objects.rectangle.shape[i][j+1]) < selection_radius) {
                     selection_shape  = 1;
                     selection_sh_idx = i;
                     selection_index  = j;
@@ -395,7 +431,7 @@ function select_click_handler(e, gl, canvas) {
 
         for (let i = 0; selection_shape == -1 && i < gl_objects.polygon.shape.length; i++) {
             for (let j = 0; selection_shape == -1 && j < gl_objects.polygon.shape[i].length; j++) {
-                if (e_dis(x, y, gl_objects.polygon.shape[i][j], gl_objects.polygon.shape[i][j+1]) < 0.1) {
+                if (e_dis(x, y, gl_objects.polygon.shape[i][j], gl_objects.polygon.shape[i][j+1]) < selection_radius) {
                     selection_shape  = 2;
                     selection_sh_idx = i;
                     selection_index  = j;
@@ -407,6 +443,10 @@ function select_click_handler(e, gl, canvas) {
 
 function e_dis(a, b, c, d) {
     return Math.sqrt(Math.pow(a - c, 2) + Math.pow(b - d, 2))
+}
+
+function bucket_click_handler(e, gl, canvas) {
+    // TODO : Add
 }
 
 
@@ -435,6 +475,13 @@ function select_btn_handler() {
     canvas.onmousedown = function (e) { select_click_handler(e, gl, canvas) };
     canvas.onmousemove = function (e) { select_hover_handler(e, gl, canvas) };
 }
+
+// TODO : Add
+// function bucket_btn_handler() {
+//     document.getElementById("mode").innerText = "Bucket tool";
+//     canvas.onmousedown = function (e) { bucket_click_handler(e, gl, canvas) };
+//     canvas.onmousemove = null;
+// }
 
 
 
