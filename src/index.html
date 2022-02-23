@@ -12,9 +12,15 @@
             <button onclick="line_btn_handler()">Line</button>
             <button onclick="rectangle_btn_handler()">Rectangle</button>
             <button onclick="polygon_btn_handler()">Polygon</button>
-            <button onclick="select_btn_handler()">Selection</button>
+            <button onclick="select_btn_handler()">Select</button>
+            <!-- <button onclick="bucket_btn_handler()">Bucket</button> -->
         </div>
         <input type="color" id="color_picker" onchange="getColor()" value="#ffffff">
+        <div>
+            <button onclick="save()">Save</button>
+            <input type="file" id="load_src" accept="txt">
+            <button onclick="load()">Load</button>
+        </div>
         <div id="polygon_helper"></div>
     </body>
 
@@ -37,6 +43,24 @@
 
         void main() {
           gl_FragColor = v_color;
+        }
+    </script>
+
+    <script id="select-vx-shader" type="notjs">
+        attribute vec2 a_position;
+        attribute vec4 a_color;
+
+        void main() {
+          gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+
+    <script id="select-fg-shader" type="notjs">
+        precision mediump float;
+        uniform vec4 u_id;
+
+        void main() {
+          gl_FragColor = u_id;
         }
     </script>
 
