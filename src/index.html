@@ -15,6 +15,11 @@
             <button onclick="select_btn_handler()">Selection</button>
         </div>
         <input type="color" id="color_picker" onchange="getColor()" value="#ffffff">
+        <div>
+            <button onclick="save()">Save</button>
+            <input type="file" id="load_src" accept="txt">
+            <button onclick="load()">Load</button>
+        </div>
         <div id="polygon_helper"></div>
     </body>
 

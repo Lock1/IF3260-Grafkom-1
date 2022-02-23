@@ -364,4 +364,24 @@ function getColor() {
     picked_color = [rgb[0]/255, rgb[1]/255, rgb[2]/255, 1.0];
 }
 
+function save() {
+    var a = document.createElement("a");
+    var file = new Blob([JSON.stringify(gl_objects)], {type : "text/plain"});
+    a.href = URL.createObjectURL(file);
+    a.download = "save_cad.txt";
+    a.click();
+}
+
+function load() {
+    var src = document.getElementById("load_src");
+    var reader = new FileReader();
+
+    reader.readAsText(src.files[0]);
+    reader.onerror = (e) => {console.log("Load error")};
+    reader.onload  = (e) => {
+        gl_objects = JSON.parse(e.target.result);
+    };
+}
+
+
 window.onload = main;
