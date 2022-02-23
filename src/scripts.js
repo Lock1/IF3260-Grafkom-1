@@ -36,9 +36,7 @@ var picked_color = [1.0, 1.0, 1.0, 1.0];
 
 
 function main() {
-    var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader", "fragment-shader"]);
-    var selector_program = webglUtils.createProgramFromScripts(gl, ["select-vx-shader", "select-fg-shader"]);
-    canvas.addEventListener("keydown", (e) => {console.log(e.keyCode)}); // DEBUG
+    var program = create_program(gl, "vertex-shader", "fragment-shader");
 
     var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
     var colorAttributeLocation    = gl.getAttribLocation(program, "a_color");
@@ -59,7 +57,13 @@ function main() {
     }
 
     function drawScene() {
-        webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+        const width  = canvas.clientWidth  * 1 | 0;
+        const height = canvas.clientHeight * 1 | 0;
+        if (canvas.width !== width ||  canvas.height !== height) {
+          canvas.width  = width;
+          canvas.height = height;
+        }
+
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -343,7 +347,7 @@ function select_hover_handler(e, gl, canvas) {
                         opposite_index = 2;
                         break;
                 }
-                console.log(opposite_index)
+
                 gl_objects.rectangle.shape[selection_sh_idx][selection_index] = x;
                 gl_objects.rectangle.shape[selection_sh_idx][selection_index + 1] = y;
 

@@ -46,25 +46,6 @@
         }
     </script>
 
-    <script id="select-vx-shader" type="notjs">
-        attribute vec2 a_position;
-        attribute vec4 a_color;
-
-        void main() {
-          gl_Position = vec4(a_position, 0.0, 1.0);
-        }
-    </script>
-
-    <script id="select-fg-shader" type="notjs">
-        precision mediump float;
-        uniform vec4 u_id;
-
-        void main() {
-          gl_FragColor = u_id;
-        }
-    </script>
-
-    <script src="webgl-utils.js"></script>
     <script src="tools.js"></script>
     <script src="scripts.js"></script>
 </html>
