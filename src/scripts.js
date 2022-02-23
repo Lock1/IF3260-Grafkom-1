@@ -315,31 +315,6 @@ var selection_sh_idx = -1;
 var selection_index  = -1;
 
 function select_hover_handler(e, gl, canvas) {
-    // var mX = e.clientX - rect.left;
-    // var mY = e.clientY - rect.top;
-    // const pX = mX * gl.canvas.width / gl.canvas.clientWidth;
-    // const pY = gl.canvas.height - mY * gl.canvas.height / gl.canvas.clientHeight - 1;
-    // const data = new Uint8Array(4);
-    // gl.readPixels(
-        //     pX, pY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data
-        // );
-        // console.log(pX, pY, data);
-
-    // const rect = canvas.getBoundingClientRect();
-    // var x  = e.clientX;
-    // var y  = e.clientY;
-    // x = (2*(x - rect.left) - canvas.width) / canvas.width;
-    // y = (canvas.height - 2*(y - rect.top)) / canvas.height;
-    //
-    // var selection_shape = -1;
-    // var selection_index = -1;
-    // for (let i = 0; i < gl_objects.line.vertices.length; i += 2) {
-    //     if (e_dis(x, y, gl_objects.line.vertices[i], gl_objects.line.vertices[i+1]) < 0.1) {
-    //         selection_shape = 0;
-    //         selection_index = i;
-    //     }
-    // }
-
     if (selection_shape != -1) {
         const rect = canvas.getBoundingClientRect();
         var x  = e.clientX;
@@ -445,8 +420,69 @@ function e_dis(a, b, c, d) {
     return Math.sqrt(Math.pow(a - c, 2) + Math.pow(b - d, 2))
 }
 
+
+var bucket_shape  = -1;
+var bucket_sh_idx = -1;
+var bucket_index  = -1;
+
 function bucket_click_handler(e, gl, canvas) {
-    // TODO : Add
+    const rect = canvas.getBoundingClientRect();
+    var x  = e.clientX;
+    var y  = e.clientY;
+    x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+
+    if (bucket_shape != -1) {
+        bucket_shape = -1;
+        bucket_index = -1;
+    }
+    else {
+        for (let i = 0; bucket_shape == -1 && i < gl_objects.line.vertices.length; i += 2) {
+            if (e_dis(x, y, gl_objects.line.vertices[i], gl_objects.line.vertices[i+1]) < selection_radius) {
+                bucket_shape = 0;
+                bucket_index = i;
+            }
+        }
+
+        for (let i = 0; bucket_shape == -1 && i < gl_objects.rectangle.shape.length; i++) {
+            for (let j = 0; bucket_shape == -1 && j < gl_objects.rectangle.shape[i].length; j++) {
+                if (e_dis(x, y, gl_objects.rectangle.shape[i][j], gl_objects.rectangle.shape[i][j+1]) < selection_radius) {
+                    bucket_shape  = 1;
+                    bucket_sh_idx = i;
+                    bucket_index  = j;
+                }
+            }
+        }
+
+        for (let i = 0; bucket_shape == -1 && i < gl_objects.polygon.shape.length; i++) {
+            for (let j = 0; bucket_shape == -1 && j < gl_objects.polygon.shape[i].length; j++) {
+                if (e_dis(x, y, gl_objects.polygon.shape[i][j], gl_objects.polygon.shape[i][j+1]) < selection_radius) {
+                    bucket_shape  = 2;
+                    bucket_sh_idx = i;
+                    bucket_index  = j;
+                }
+            }
+        }
+    }
+
+
+    switch (bucket_shape) {
+        case 0:
+            for (let i = 0; i < 4; i++)
+                gl_objects.line.colors[2*bucket_index + i] = picked_color[i];
+            break;
+        case 1:
+            for (let i = 0; i < 4; i++)
+                gl_objects.rectangle.shape_color[bucket_sh_idx][2*bucket_index + i] = picked_color[i];
+            break;
+        case 2:
+            for (let i = 0; i < 4; i++)
+                gl_objects.polygon.shape_color[bucket_sh_idx][2*bucket_index + i] = picked_color[i];
+            break;
+        default:
+
+    }
+
 }
 
 
@@ -476,12 +512,11 @@ function select_btn_handler() {
     canvas.onmousemove = function (e) { select_hover_handler(e, gl, canvas) };
 }
 
-// TODO : Add
-// function bucket_btn_handler() {
-//     document.getElementById("mode").innerText = "Bucket tool";
-//     canvas.onmousedown = function (e) { bucket_click_handler(e, gl, canvas) };
-//     canvas.onmousemove = null;
-// }
+function bucket_btn_handler() {
+    document.getElementById("mode").innerText = "Bucket tool";
+    canvas.onmousedown = function (e) { bucket_click_handler(e, gl, canvas) };
+    canvas.onmousemove = null;
+}
 
 
 
