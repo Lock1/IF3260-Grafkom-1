@@ -106,7 +106,7 @@ function line_click_handler(e, gl, canvas) {
     var y    = e.clientY;
     var rect = e.target.getBoundingClientRect();
 
-    // Normalisasi antara 0 - 1
+    // Normalisasi antara -1 - 1
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
@@ -127,7 +127,7 @@ function line_hover_handler(e, gl, canvas) {
     var y    = e.clientY;
     var rect = e.target.getBoundingClientRect();
 
-    // Normalisasi antara 0 - 1
+    // Normalisasi antara -1 - 1
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
@@ -151,7 +151,7 @@ function rectangle_click_handler(e, gl, canvas) {
     var y    = e.clientY;
     var rect = e.target.getBoundingClientRect();
 
-    // Normalisasi antara 0 - 1
+    // Normalisasi antara -1 - 1
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
@@ -178,7 +178,7 @@ function rectangle_hover_handler(e, gl, canvas) {
     var y    = e.clientY;
     var rect = e.target.getBoundingClientRect();
 
-    // Normalisasi antara 0 - 1
+    // Normalisasi antara -1 - 1
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
@@ -235,7 +235,7 @@ function polygon_click_handler(e, gl, canvas) {
             var y    = e.clientY;
             var rect = e.target.getBoundingClientRect();
 
-            // Normalisasi antara 0 - 1
+            // Normalisasi antara -1 - 1
             x = (2*(x - rect.left) - canvas.width) / canvas.width;
             y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
@@ -272,7 +272,7 @@ function polygon_hover_handler(e, gl, canvas) {
     var y    = e.clientY;
     var rect = e.target.getBoundingClientRect();
 
-    // Normalisasi antara 0 - 1
+    // Normalisasi antara -1 - 1
     x = (2*(x - rect.left) - canvas.width) / canvas.width;
     y = (canvas.height - 2*(y - rect.top)) / canvas.height;
 
@@ -306,21 +306,108 @@ function finalize_polygon() {
     document.getElementById("polygon_helper").innerHTML = "";
 }
 
+
+
+var selection_shape  = -1;
+var selection_sh_idx = -1;
+var selection_index  = -1;
+
 function select_hover_handler(e, gl, canvas) {
-    const rect = canvas.getBoundingClientRect();
-    var mX = e.clientX - rect.left;
-    var mY = e.clientY - rect.top;
+    // var mX = e.clientX - rect.left;
+    // var mY = e.clientY - rect.top;
+    // const pX = mX * gl.canvas.width / gl.canvas.clientWidth;
+    // const pY = gl.canvas.height - mY * gl.canvas.height / gl.canvas.clientHeight - 1;
+    // const data = new Uint8Array(4);
+    // gl.readPixels(
+        //     pX, pY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data
+        // );
+        // console.log(pX, pY, data);
 
-    const pX = mX * gl.canvas.width / gl.canvas.clientWidth;
-    const pY = gl.canvas.height - mY * gl.canvas.height / gl.canvas.clientHeight - 1;
-    const data = new Uint8Array(4);
-    gl.readPixels(
-        pX, pY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data
-    );
-    console.log(pX, pY, data);
+    // const rect = canvas.getBoundingClientRect();
+    // var x  = e.clientX;
+    // var y  = e.clientY;
+    // x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    // y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+    //
+    // var selection_shape = -1;
+    // var selection_index = -1;
+    // for (let i = 0; i < gl_objects.line.vertices.length; i += 2) {
+    //     if (e_dis(x, y, gl_objects.line.vertices[i], gl_objects.line.vertices[i+1]) < 0.1) {
+    //         selection_shape = 0;
+    //         selection_index = i;
+    //     }
+    // }
 
+    if (selection_shape != -1) {
+        const rect = canvas.getBoundingClientRect();
+        var x  = e.clientX;
+        var y  = e.clientY;
+        x = (2*(x - rect.left) - canvas.width) / canvas.width;
+        y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+
+        switch (selection_shape) {
+            case 0:
+                gl_objects.line.vertices[selection_index] = x;
+                gl_objects.line.vertices[selection_index + 1] = y;
+                break;
+            case 1:
+                gl_objects.rectangle.shape[selection_sh_idx][selection_index] = x;
+                gl_objects.rectangle.shape[selection_sh_idx][selection_index + 1] = y;
+                break;
+            case 2:
+                gl_objects.polygon.shape[selection_sh_idx][selection_index] = x;
+                gl_objects.polygon.shape[selection_sh_idx][selection_index + 1] = y;
+                break;
+            default:
+                console.log("Selection error");
+        }
+    }
 }
 
+function select_click_handler(e, gl, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    var x  = e.clientX;
+    var y  = e.clientY;
+    x = (2*(x - rect.left) - canvas.width) / canvas.width;
+    y = (canvas.height - 2*(y - rect.top)) / canvas.height;
+
+    if (selection_shape != -1) {
+        selection_shape = -1;
+        selection_index = -1;
+    }
+    else {
+        for (let i = 0; selection_shape == -1 && i < gl_objects.line.vertices.length; i += 2) {
+            if (e_dis(x, y, gl_objects.line.vertices[i], gl_objects.line.vertices[i+1]) < 0.1) {
+                selection_shape = 0;
+                selection_index = i;
+            }
+        }
+
+        for (let i = 0; selection_shape == -1 && i < gl_objects.rectangle.shape.length; i++) {
+            for (let j = 0; selection_shape == -1 && j < gl_objects.rectangle.shape[i].length; j++) {
+                if (e_dis(x, y, gl_objects.rectangle.shape[i][j], gl_objects.rectangle.shape[i][j+1]) < 0.1) {
+                    selection_shape  = 1;
+                    selection_sh_idx = i;
+                    selection_index  = j;
+                }
+            }
+        }
+
+        for (let i = 0; selection_shape == -1 && i < gl_objects.polygon.shape.length; i++) {
+            for (let j = 0; selection_shape == -1 && j < gl_objects.polygon.shape[i].length; j++) {
+                if (e_dis(x, y, gl_objects.polygon.shape[i][j], gl_objects.polygon.shape[i][j+1]) < 0.1) {
+                    selection_shape  = 2;
+                    selection_sh_idx = i;
+                    selection_index  = j;
+                }
+            }
+        }
+    }
+}
+
+function e_dis(a, b, c, d) {
+    return Math.sqrt(Math.pow(a - c, 2) + Math.pow(b - d, 2))
+}
 
 
 
@@ -345,7 +432,7 @@ function polygon_btn_handler() {
 
 function select_btn_handler() {
     document.getElementById("mode").innerText = "Selection tool";
-    canvas.onmousedown = null;
+    canvas.onmousedown = function (e) { select_click_handler(e, gl, canvas) };
     canvas.onmousemove = function (e) { select_hover_handler(e, gl, canvas) };
 }
 
